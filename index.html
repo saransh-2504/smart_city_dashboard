@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart City — 3D Command Center (Mumbai)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="app">
+    <div class="stage" id="stage">
+      <div class="panel left">
+        <div>
+          <div class="title">City</div>
+          <div class="kpi">
+            <div>
+              <div class="big" id="city-name">Mumbai</div>
+              <div class="small muted">Latitude: 19.0760 • Longitude: 72.8777</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel float" style="padding:12px">
+          <div class="title">Current Weather</div>
+          <div style="display:flex; align-items:center; justify-content:space-between">
+            <div>
+              <div class="kpi">
+                <div class="big" id="temp">--°C</div>
+                <div class="small" id="desc">Loading...</div>
+              </div>
+              <div class="muted" id="last-updated">Last updated: --</div>
+            </div>
+            <div style="text-align:right">
+              <div class="tag" id="orb-state">Orb Idle</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel float" style="padding:12px">
+          <div class="title">Wind & Humidity</div>
+          <div style="display:flex; gap:12px; margin-top:8px">
+            <div>
+              <div class="small muted">Wind</div>
+              <div class="big" id="wind">-- m/s</div>
+            </div>
+            <div>
+              <div class="small muted">Humidity</div>
+              <div class="big" id="hum">--%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel center-stage">
+        <div style="display:flex; flex-direction:column; align-items:center; gap:18px; width:100%">
+
+          <div class="orb-wrap" id="orbWrap">
+            <div class="robot-css" id="robot">
+              <div class="robot-head">
+                <div class="face-overlay" id="faceOverlay">
+                  <div class="eye left-eye"></div>
+                  <div class="eye right-eye"></div>
+                  <div class="mouth" id="mouth"></div>
+                </div>
+              </div>
+              <div class="robot-body"></div>
+              <div class="robot-base"></div>
+            </div>
+          </div><div class="eye right-eye"></div>
+                <div class="mouth" id="mouth"></div>
+              </div>
+            </div>
+          </div></div>
+          </div>
+
+          <div style="width:84%;">
+            <div class="title">Temperature (next 24h)</div>
+            <div class="chart-card panel float" style="padding:12px">
+              <canvas id="tempChart" style="width:100%; height:200px"></canvas>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="panel right">
+        <div class="panel float" style="padding:12px">
+          <div class="title">Forecast Summary</div>
+          <div id="forecast-summary" style="margin-top:8px; display:flex; flex-direction:column; gap:8px"></div>
+        </div>
+
+        <div class="panel float" style="padding:12px">
+          <div class="title">Controls</div>
+          <div style="display:flex; gap:8px; margin-top:10px; align-items:center">
+            <select id="citySelect">
+              <option value="mumbai">Mumbai</option>
+              <option value="delhi">Delhi</option>
+              <option value="newyork">New York</option>
+              <option value="london">London</option>
+            </select>
+            <button id="refreshBtn">Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div id="health-score">City Health Score: --</div>
+        <div id="meta">Open‑Meteo • No API key • Prototype</div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script src="script.js">
+  </script>
+</body>
+</html>
