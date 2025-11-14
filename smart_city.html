@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        body::-webkit-scrollbar-track {
+            background: #2d3748; 
+        }
+        body::-webkit-scrollbar-thumb {
+            background: #4a5568; 
+            border-radius: 4px;
+        }
+        body::-webkit-scrollbar-thumb:hover {
+            background: #718096; 
+        }
+
+        
+        #welcome-overlay {
+            transition: opacity 1s ease-out, visibility 1s ease-out;
+        }
+        .welcome-fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        
+        #main-dashboard {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease-in 0.5s, transform 1s ease-in 0.5s;
+        }
+        #main-dashboard.fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        
+        .menu-btn {
+            transition: all 0.3s ease;
+        }
+        .menu-item {
+            position: absolute;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+        .menu-open .menu-item {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+        
+        .menu-open .menu-item-1 { transform: translate(-80px, -20px) scale(1); }
+        .menu-open .menu-item-2 { transform: translate(-100px, 20px) scale(1); }
+        .menu-open .menu-item-3 { transform: translate(-80px, 60px) scale(1); }
+        .menu-open .menu-item-4 { transform: translate(-30px, 80px) scale(1); }
+       
+        .glass-card {
+            background: rgba(31, 41, 55, 0.6); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        
+        .tab-btn.active {
+            background-color: #3b82f6; 
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans leading-normal tracking-normal min-h-screen">
+
+    
+    <canvas id="bg-canvas"></canvas>
+
+    
+    <div id="welcome-overlay" class="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center">
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-600 h-32 w-32 animate-spin border-t-blue-500"></div>
+        <h1 class="text-4xl font-bold mt-8 animate-pulse">Loading Smart City...</h1>
+    </div>
+
+    
+    <div id="menu-container" class="fixed top-6 right-6 z-40">
+        <button id="menu-toggle" class="menu-btn w-16 h-16 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transform hover:scale-110">
+            <i data-lucide="menu" class="w-8 h-8"></i>
+        </button>
+        
+        <a href="#" class="menu-item menu-item-1 w-14 h-14 bg-teal-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-teal-600" title="Login">
+            <i data-lucide="log-in" class="w-6 h-6"></i>
+        </a>
+        <a href="#" class="menu-item menu-item-2 w-14 h-14 bg-purple-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-purple-600" title="Sign Up">
+            <i data-lucide="user-plus" class="w-6 h-6"></i>
+        </a>
+        <a href="#" class="menu-item menu-item-3 w-14 h-14 bg-pink-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-pink-600" title="Account">
+            <i data-lucide="user" class="w-6 h-6"></i>
+        </a>
+        <a href="#" class="menu-item menu-item-4 w-14 h-14 bg-yellow-500 rounded-full shadow-lg flex items-center justify-center text-white hover:bg-yellow-600" title="Settings">
+            <i data-lucide="settings" class="w-6 h-6"></i>
+        </a>
+    </div>
+
+    
+    <div id="main-dashboard" class="container mx-auto p-4 md:p-8 relative z-10">
+        
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">
+                Smart City Dashboard
+            </h1>
+        </header>
+
+        
+        <div class="mb-8 p-6 glass-card rounded-xl shadow-2xl">
+            <div class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="city-input" class="flex-grow w-full md:w-auto p-4 bg-gray-700 border border-gray-600 rounded-lg text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter city name (e.g., London, Tokyo)...">
+                <button id="search-btn" class="w-full md:w-auto p-4 bg-blue-600 text-white rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                    <span>Search</span>
+                </button>
+                <button id="refresh-btn" class="w-full md:w-auto p-4 bg-gray-600 text-white rounded-lg text-lg font-semibold hover:bg-gray-700 transition-colors duration-300 shadow-lg flex items-center justify-center gap-2" title="Refresh data for current city">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    <span>Refresh</span>
+                </button>
+            </div>
+            <div id="loading-indicator" class="text-center mt-4 text-blue-400 font-medium hidden">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-600 h-8 w-8 animate-spin border-t-blue-500 inline-block mr-2"></div>
+                Fetching data...
+            </div>
+            <div id="error-message" class="text-center mt-4 text-red-400 font-medium hidden"></div>
+        </div>
+
+        
+        <div class="mb-6">
+            <nav class="flex justify-center space-x-2 md:space-x-4 p-2 glass-card rounded-xl" role="tablist">
+                <button class="tab-btn active" data-tab="weather">
+                    <i data-lucide="cloud-sun" class="w-5 h-5"></i>
+                    <span>Weather</span>
+                </button>
+                <button class="tab-btn" data-tab="air-quality">
+                    <i data-lucide="wind" class="w-5 h-5"></i>
+                    <span>Air Quality</span>
+                </button>
+                <button class="tab-btn" data-tab="traffic">
+                    <i data-lucide="siren" class="w-5 h-5"></i>
+                    <span>Traffic</span>
+                </button>
+                <button class="tab-btn" data-tab="energy">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                    <span>Energy</span>
+                </button>
+            </nav>
+        </div>
+
+        
+        <div class="w-full">
+            
+            <div id="weather-tab" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <div class="col-span-1 lg:col-span-1 space-y-6">
+                    <div class="p-6 glass-card rounded-xl shadow-xl h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4" id="current-city">Search for a city</h3>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-6xl font-bold" id="current-temp">--°C</span>
+                                <img id="current-weather-icon" src="https://placehold.co/100x100/374151/4A5568?text=?" alt="weather icon" class="w-24 h-24">
+                            </div>
+                            <p class="text-xl capitalize text-blue-300" id="current-description">--</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6 text-lg">
+                            <div>
+                                <p class="text-gray-400">Feels Like</p>
+                                <p class="font-semibold" id="current-feels-like">--°C</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Humidity</p>
+                                <p class="font-semibold" id="current-humidity">--%</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Wind Speed</p>
+                                <p class="font-semibold" id="current-wind">-- m/s</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-400">Pressure</p>
+                                <p class="font-semibold" id="current-pressure">-- hPa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-span-1 lg:col-span-2 p-6 glass-card rounded-xl shadow-xl">
+                    <h3 class="text-2xl font-bold mb-4">7-Day Forecast</h3>
+                    <div class="h-96">
+                        <canvas id="weather-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="air-quality-tab" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+                
+                <div class="col-span-1 lg:col-span-1 p-6 glass-card rounded-xl shadow-xl">
+                    <h3 class="text-2xl font-bold mb-4">Current Air Quality</h3>
+                    <div class="text-center">
+                        <p class="text-lg text-gray-400">Overall AQI (US)</p>
+                        <p id="current-aqi" class="text-8xl font-extrabold my-4">--</p>
+                        <p id="aqi-level" class="text-2xl font-bold p-3 rounded-lg">--</p>
+                    </div>
+                </div>
+                
+                <div class="col-span-1 lg:col-span-2 p-6 glass-card rounded-xl shadow-xl">
+                    <h3 class="text-2xl font-bold mb-4">Pollutant Levels</h3>
+                    <div class="h-80">
+                        <canvas id="aqi-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="traffic-tab" class="tab-content p-6 glass-card rounded-xl shadow-xl hidden">
+                <h3 class="text-2xl font-bold mb-4">Live Traffic</h3>
+                <div class="text-center py-20 text-gray-400">
+                    <i data-lucide="construction" class="w-16 h-16 mx-auto mb-4"></i>
+                    <p class="text-xl">Traffic data integration is under development.</p>
+                    <p>Free, real-time, global traffic APIs are not readily available. This is a placeholder for a future integration.</p>
+                </div>
+            </div>
+
+            
+            <div id="energy-tab" class="tab-content p-6 glass-card rounded-xl shadow-xl hidden">
+                <h3 class="text-2xl font-bold mb-4">Energy Consumption</h3>
+                <div class="text-center py-20 text-gray-400">
+                    <i data-lucide="battery-charging" class="w-16 h-16 mx-auto mb-4"></i>
+                    <p class="text-xl">Energy grid data integration is under development.</p>
+                    <p>This section will show city-wide energy consumption and renewable energy generation.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const OPENWEATHER_API_KEY = "e5b8f332970d392f452e881a174eafaf"; 
+            
+            const cityInput = document.getElementById('city-input');
+            const searchBtn = document.getElementById('search-btn');
+            const refreshBtn = document.getElementById('refresh-btn');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessage = document.getElementById('error-message');
+            
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuContainer = document.getElementById('menu-container');
+
+            const welcomeOverlay = document.getElementById('welcome-overlay');
+            const mainDashboard = document.getElementById('main-dashboard');
+
+            let weatherChartInstance, aqiChartInstance;
+            let currentCityData = null;
+
+            let scene, camera, renderer, garden;
+
+            function initThreeJS() {
+                try {
+                    scene = new THREE.Scene();
+                    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true });
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+
+                    garden = new THREE.Group();
+
+                    const groundGeometry = new THREE.PlaneGeometry(300, 300);
+                    const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x003300, side: THREE.DoubleSide });
+                    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                    ground.rotation.x = -Math.PI / 2;
+                    ground.position.y = -5;
+                    garden.add(ground);
+                    
+                    const treeColors = [0x006400, 0x228B22, 0x004000];
+                    const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x5D4037 });
+
+                    for (let i = 0; i < 150; i++) {
+                        const trunkGeometry = new THREE.CylinderGeometry(0.2, 0.3, 2, 8);
+                        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                        
+                        const foliageMaterial = new THREE.MeshLambertMaterial({ color: treeColors[Math.floor(Math.random() * treeColors.length)] });
+                        const foliageGeometry = new THREE.ConeGeometry(1.5, 4, 12);
+                        const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+                        foliage.position.y = 3;
+
+                        const tree = new THREE.Group();
+                        tree.add(trunk);
+                        tree.add(foliage);
+                        
+                        tree.position.x = (Math.random() - 0.5) * 200;
+                        tree.position.z = (Math.random() - 0.5) * 200;
+                        tree.position.y = -4;
+
+                        garden.add(tree);
+                    }
+                    
+                    scene.add(garden);
+
+                    const ambientLight = new THREE.AmbientLight(0xcccccc, 0.5);
+                    scene.add(ambientLight);
+
+                    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    directionalLight.position.set(1, 1, 0.5).normalize();
+                    scene.add(directionalLight);
+
+                    camera.position.z = 20;
+                    camera.position.y = 5;
+
+                    animateThreeJS();
+                } catch (e) {
+                    console.error("3D background failed to load:", e);
+                    document.getElementById('bg-canvas').style.display = 'none';
+                }
+            }
+
+            function animateThreeJS() {
+                requestAnimationFrame(animateThreeJS);
+                garden.rotation.y += 0.0005;
+                renderer.render(scene, camera);
+            }
+
+            function handleWindowResize() {
+                if (!renderer || !camera) return;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            function showWelcomeAnimation() {
+                setTimeout(() => {
+                    welcomeOverlay.classList.add('welcome-fade-out');
+                    mainDashboard.classList.add('fade-in');
+                }, 1500);
+            }
+
+            function toggleMenu() {
+                menuContainer.classList.toggle('menu-open');
+                const icon = menuContainer.classList.contains('menu-open') ? 'x' : 'menu';
+                menuToggle.innerHTML = `<i data-lucide="${icon}" class="w-8 h-8"></i>`;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            function switchTab(tabName) {
+                tabs.forEach(tab => {
+                    if (tab.dataset.tab === tabName) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+                tabContents.forEach(content => {
+                    if (content.id === `${tabName}-tab`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            }
+
+            function showLoading(isLoading) {
+                loadingIndicator.classList.toggle('hidden', !isLoading);
+                errorMessage.classList.add('hidden');
+            }
+
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.classList.remove('hidden');
+            }
+            
+            async function getCoordinates(city) {
+                if (!OPENWEATHER_API_KEY) {
+                    showError("OpenWeather API Key is missing.");
+                    return null;
+                }
+                const url = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`City not found or network error: ${response.statusText}`);
+                    const data = await response.json();
+                    if (data.length === 0) throw new Error("City not found.");
+                    return { lat: data[0].lat, lon: data[0].lon, name: data[0].name, country: data[0].country };
+                } catch (error) {
+                    console.error("Error fetching coordinates:", error);
+                    showError(error.message);
+                    return null;
+                }
+            }
+            
+            async function fetchWeather(lat, lon) {
+                if (!OPENWEATHER_API_KEY) {
+                    showError("OpenWeather API Key is missing.");
+                    return null;
+                }
+                const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,alerts&appid=${OPENWEATHER_API_KEY}&units=metric`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to fetch weather data: ${response.statusText}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error("Error fetching weather:", error);
+                    showError(error.message);
+                    return null;
+                }
+            }
+            
+            async function fetchAirQuality(lat, lon) {
+                const url = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5,pm10,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&timezone=auto&forecast_days=1`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`Failed to fetch air quality data: ${response.statusText}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error("Error fetching air quality:", error);
+                    showError(error.message);
+                    return null;
+                }
+            }
+            
+            async function handleSearch() {
+                const city = cityInput.value.trim();
+                if (!city) {
+                    showError("Please enter a city name.");
+                    return;
+                }
+                
+                showLoading(true);
+                currentCityData = null;
+
+                const coords = await getCoordinates(city);
+                
+                if (coords) {
+                    currentCityData = coords; 
+                    const [weatherData, airQualityData] = await Promise.all([
+                        fetchWeather(coords.lat, coords.lon),
+                        fetchAirQuality(coords.lat, coords.lon)
+                    ]);
+                    
+                    if (weatherData) {
+                        updateWeatherUI(weatherData, coords);
+                        renderWeatherChart(weatherData.daily);
+                    }
+                    if (airQualityData) {
+                        updateAirQualityUI(airQualityData.current);
+                        renderAirQualityChart(airQualityData.current);
+                    }
+                }
+                
+                showLoading(false);
+            }
+
+            function updateWeatherUI(data, coords) {
+                const { current } = data;
+                document.getElementById('current-city').textContent = `${coords.name}, ${coords.country}`;
+                document.getElementById('current-temp').textContent = `${Math.round(current.temp)}°C`;
+                document.getElementById('current-description').textContent = current.weather[0].description;
+                document.getElementById('current-weather-icon').src = `https://openweathermap.org/img/wn/${current.weather[0].icon}@2x.png`;
+                document.getElementById('current-feels-like').textContent = `${Math.round(current.feels_like)}°C`;
+                document.getElementById('current-humidity').textContent = `${current.humidity}%`;
+                document.getElementById('current-wind').textContent = `${current.wind_speed} m/s`;
+                document.getElementById('current-pressure').textContent = `${current.pressure} hPa`;
+            }
+
+            function renderWeatherChart(dailyData) {
+                const ctx = document.getElementById('weather-chart').getContext('2d');
+                
+                const labels = dailyData.slice(0, 7).map(day => 
+                    new Date(day.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' })
+                );
+                const tempDataMax = dailyData.slice(0, 7).map(day => Math.round(day.temp.max));
+                const tempDataMin = dailyData.slice(0, 7).map(day => Math.round(day.temp.min));
+
+                if (weatherChartInstance) {
+                    weatherChartInstance.destroy();
+                }
+
+                weatherChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'High °C',
+                                data: tempDataMax,
+                                borderColor: '#f87171', 
+                                backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                            },
+                            {
+                                label: 'Low °C',
+                                data: tempDataMin,
+                                borderColor: '#60a5fa', 
+                                backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: { color: '#9ca3af' }, 
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#9ca3af' }, 
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#e5e7eb' } 
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function getAQILevel(aqi) {
+                if (aqi <= 50) return { level: 'Good', color: 'bg-green-500' };
+                if (aqi <= 100) return { level: 'Moderate', color: 'bg-yellow-500' };
+                if (aqi <= 150) return { level: 'Unhealthy for Sensitive', color: 'bg-orange-500' };
+                if (aqi <= 200) return { level: 'Unhealthy', color: 'bg-red-500' };
+                if (aqi <= 300) return { level: 'Very Unhealthy', color: 'bg-purple-500' };
+                return { level: 'Hazardous', color: 'bg-red-700' };
+            }
+
+            function updateAirQualityUI(current) {
+                if (!current) return;
+                const aqi = current.us_aqi;
+                const { level, color } = getAQILevel(aqi);
+                
+                document.getElementById('current-aqi').textContent = aqi;
+                const aqiLevelEl = document.getElementById('aqi-level');
+                aqiLevelEl.textContent = level;
+                
+                aqiLevelEl.className = 'text-2xl font-bold p-3 rounded-lg text-white ' + color;
+            }
+
+            function renderAirQualityChart(current) {
+                const ctx = document.getElementById('aqi-chart').getContext('2d');
+                
+                const labels = ['PM2.5', 'PM10', 'Ozone (O₃)', 'NO₂', 'SO₂', 'CO'];
+                const data = current ? [
+                    current.pm2_5,
+                    current.pm10,
+                    current.ozone,
+                    current.nitrogen_dioxide,
+                    current.sulphur_dioxide,
+                    current.carbon_monoxide
+                ] : [];
+                
+                if (aqiChartInstance) {
+                    aqiChartInstance.destroy();
+                }
+
+                aqiChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Pollutant Level (μg/m³)',
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(153, 102, 255, 0.6)',
+                                'rgba(255, 159, 64, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { color: '#9ca3af' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            },
+                            y: {
+                                ticks: { color: '#9ca3af' },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += context.parsed.x + ' μg/m³';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function handleRefresh() {
+                if (currentCityData && currentCityData.name) {
+                    cityInput.value = currentCityData.name;
+                    handleSearch();
+                } else {
+                    showError("No city selected to refresh. Please perform a search first.");
+                }
+            }
+
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.error('Lucide library not loaded.');
+            }
+            
+            
+            initThreeJS();
+            window.addEventListener('resize', handleWindowResize);
+
+            
+            showWelcomeAnimation();
+
+            
+            menuToggle.addEventListener('click', toggleMenu);
+
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+                
+                const style = 'tab-btn flex items-center justify-center gap-2 py-3 px-4 md:px-6 rounded-lg text-sm md:text-base font-medium transition-all duration-300 hover:bg-blue-500 hover:text-white';
+                tab.className = style;
+            });
+            switchTab('weather'); 
+
+            
+            searchBtn.addEventListener('click', handleSearch);
+            cityInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            refreshBtn.addEventListener('click', handleRefresh);
+
+            
+            renderWeatherChart([]);
+            renderAirQualityChart({});
+
+        });
+    </script>
+
+</body>
+</html>
