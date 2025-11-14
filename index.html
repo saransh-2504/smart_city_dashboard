@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Smart City Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+4gk7rYw5gqQH9yXgZ4FQxjK0h6k0g2f2f6b3v0Po=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kF1/0kY1o2q+vYbR6k5gkI6u1XgL4q0Y7jR0k=" crossorigin=""></script>
+
+  <meta name="description" content="Smart City Dashboard - Weather + Air Quality sample project">
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="title">Smart City Dashboard</div>
+      <div class="controls">
+        <input id="cityInput" placeholder="Search city (requires OpenWeather API key)" />
+        <button id="searchBtn">Search</button>
+        <select id="presetCities">
+          <option value="28.6139,77.2090">New Delhi, IN</option>
+          <option value="51.5072,-0.1276">London, UK</option>
+          <option value="40.7128,-74.0060">New York, US</option>
+          <option value="1.3521,103.8198">Singapore, SG</option>
+          <option value="19.07598,72.87766">Mumbai, IN</option>
+        </select>
+        <button id="refreshBtn">Refresh Now</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="summary">
+        <div class="card" id="cityCard">
+          <div class="card-title">City</div>
+          <div id="cityName">--</div>
+          <div id="lastUpdated" class="muted">Last updated: --</div>
+        </div>
+
+        <div class="card" id="tempCard">
+          <div class="card-title">Temperature</div>
+          <div id="tempValue">-- °C</div>
+          <canvas id="tempChart" height="120"></canvas>
+        </div>
+
+        <div class="card" id="aqiCard">
+          <div class="card-title">Air Quality (PM2.5)</div>
+          <div id="aqiValue">-- µg/m³</div>
+          <canvas id="aqiChart" height="120"></canvas>
+        </div>
+
+        <div class="card" id="metaCard">
+          <div class="card-title">Humidity & Wind</div>
+          <div class="meta-row"><span>Humidity:</span> <span id="humidity">-- %</span></div>
+          <div class="meta-row"><span>Wind:</span> <span id="wind">-- m/s</span></div>
+          <canvas id="humChart" height="120"></canvas>
+        </div>
+      </section>
+
+      <section class="details">
+        <div id="map" class="map"></div>
+        <div class="charts">
+          <div class="chart-card">
+            <div class="card-title">Temperature (Past 24H)</div>
+            <canvas id="temp24Chart"></canvas>
+          </div>
+
+          <div class="chart-card">
+            <div class="card-title">PM2.5 (Past 24H)</div>
+            <canvas id="pm24Chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>Built with OpenWeatherMap (weather + geocoding, API key required) and Open-Meteo (air quality, no key).</div>
+        <div>Auto-refresh: <span id="autoRefreshStatus">ON (30s)</span></div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
