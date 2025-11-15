@@ -5,33 +5,225 @@
     --accent:#4f46e5;
     --glass: rgba(255,255,255,0.03);
   }
-  *{box-sizing:border-box}
-  html,body,#map{height:100%}
+  *{
+    box-sizing:border-box;
+  }
+  html,body,#map{
+    height:100%;
+  }
   body{
     margin:0;
     font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
     background:linear-gradient(180deg,#071021 0%, #081426 100%);
     color:#e6eef8;
   }
-  .container{max-width:1200px;margin:24px auto;padding:16px}
-  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-  .title{font-size:1.3rem;font-weight:700}
-  .controls{display:flex;gap:8px;align-items:center}
-  .controls input{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-  .controls button, .controls select{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
-  .controls select{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px}
-  main{display:flex;flex-direction:column;gap:16px}
-  .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-  .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 6px 18px rgba(3,7,18,0.7)}
-  .card-title{font-size:0.85rem;color:var(--muted);margin-bottom:8px}
-  #tempValue,#aqiValue,#cityName{font-size:1.2rem;font-weight:700}
-  .muted{font-size:0.8rem;color:var(--muted)}
-  .meta-row{display:flex;justify-content:space-between;margin-top:6px}
-  .details{display:grid;grid-template-columns:1fr 420px;gap:12px}
-  .map{height:420px;border-radius:12px;overflow:hidden}
-  .charts{display:flex;flex-direction:column;gap:12px}
-  .chart-card{background:var(--card);padding:12px;border-radius:12px}
-  .footer{display:flex;justify-content:space-between;color:var(--muted);font-size:0.85rem}
-  @media(max-width:900px){.details{grid-template-columns:1fr}.controls{flex-direction:column;align-items:flex-start}.container{padding:8px}}
-  
-  
+  #presetCities{
+    cursor:pointer;
+    color: #eaebec;
+    background-color: #0f1724;
+  }
+  .container{
+    max-width:1200px;
+    margin:24px auto;
+    padding:16px;
+  }
+  .topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .title{
+    font-size:2rem;
+    font-weight:700;
+    bottom:20px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .controls input{
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.06);
+    background:transparent;
+    color:inherit;
+  }
+  .controls button, .controls select{
+    padding:8px 10px;
+    border-radius:8px;
+    border:0;
+    background:var(--accent);
+    color:#fff;
+    cursor:pointer;
+  }
+  .controls select{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    padding:8px;
+    border-radius:8px;
+  }
+  main{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--card);
+    padding:12px;
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(3,7,18,0.7);
+  }
+  .card-title{
+    font-size:0.85rem;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  #tempValue,#aqiValue,#cityName{
+    font-size:1.2rem;
+    font-weight:700;
+  }
+  .muted{
+    font-size:0.8rem;
+    color:var(--muted);
+  }
+  .meta-row{
+    display:flex;
+    justify-content:space-between;
+    margin-top:6px;
+  }
+  .details{
+    display:grid;
+    grid-template-columns:1fr 420px;
+    gap:12px;
+  }
+  .map{
+    height:420px;
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .charts
+  {display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .chart-card{
+    background:var(--card);
+    padding:12px;
+    border-radius:12px;
+  }
+  .footer{
+    display:flex;
+    justify-content:space-between;
+    color:var(--muted);
+    font-size:0.85rem;
+  }
+  @media(max-width:900px){
+    .details{
+      grid-template-columns:1fr;
+    }
+    .controls{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .container{
+      padding:8px;
+    }
+  }
+
+#cityCard {
+  position: relative;
+}
+
+#robotAssistant.inside-card {
+  position: absolute;
+  right: 65px;  
+  top: 95px;
+  width: 140px;
+  height: 200px;
+  pointer-events: none;
+  transition: transform .15s linear;
+}
+
+#robotAssistant .robot-head {
+  width: 120px;
+  height: 120px;
+  border-radius: 32px;
+  margin: 0 auto;
+  background: linear-gradient(145deg, #d1ecff, #a5d7ff);
+  box-shadow:
+    0 0 25px rgba(120,180,255,0.7),
+    inset 0 0 18px rgba(255,255,255,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#robotAssistant .face {
+  width: 78px;
+  height: 78px;
+  border-radius: 22px;
+  background: #0b1826;
+  position: relative;
+  box-shadow:0 0 15px rgba(140,190,255,0.4);
+}
+
+#robotAssistant .eye {
+  width: 16px;
+  height: 16px;
+  top: 18px;
+  background: #dff4ff;       
+  border-radius: 50%;
+  position: absolute;
+  box-shadow:0 0 22px #a7e6ff;
+}
+.left-eye {
+   left: 16px; 
+  }
+.right-eye { 
+  right: 16px; 
+}
+
+#robotAssistant .mouth {
+  width: 28px;
+  height: 6px;
+  background: linear-gradient(90deg, #a7e4ff, #d8f6ff);
+  border-radius: 20px;
+  position: absolute;
+  bottom: 18px;
+  left: 35%;
+  transform: translateX(-50%);
+  transition: .25s;
+  box-shadow: 0 0 10px rgba(180,240,255,0.6);
+}
+
+#robotAssistant .robot-body {
+  width: 95px;
+  height: 75px;
+  margin: 10px auto 0;
+  border-radius: 30px;
+  background: linear-gradient(145deg, #c6e9ff, #9ccfff);
+  box-shadow:
+    0 0 20px rgba(140,200,255,0.5),
+    inset 0 0 12px rgba(255,255,255,0.5);
+}
+
+#robotAssistant .robot-base {
+  width: 130px;
+  height: 30px;
+  margin: 8px auto 0;
+  background: linear-gradient(145deg, #b8e1ff, #8ccaff);
+  border-radius: 35px;
+  box-shadow:
+    0 0 22px rgba(150,210,255,0.45);
+}
+
+#robotAssistant.breathe {
+  transform: scale(1.03);
+}
