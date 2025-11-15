@@ -1,26 +1,23 @@
-// ----- Configuration -----
-// Insert your OpenWeatherMap API key here for full search/geocoding support.
-const API_KEY_OPENWEATHER = ""; // <-- PUT YOUR OPENWEATHERMAP KEY HERE (optional, but recommended)
 
-// Auto-refresh interval in milliseconds
-const AUTO_REFRESH_MS = 30_000; // 30 seconds
+const API_KEY_OPENWEATHER = "80a25ee136b42335beffca3c666cf528"; 
 
-// Default coordinates (New Delhi)
+const AUTO_REFRESH_MS = 30000;
+
+//(New Delhi)
 let currentCoords = { lat: 28.6139, lon: 77.2090 };
 let autoRefreshTimer = null;
 
-// Chart instances (will be created later)
+// Chart instances
 let tempChart, aqiChart, humChart, temp24Chart, pm24Chart;
 let map, marker;
 
-// Helper: fetch JSON safely
+//fetch JSON 
 async function fetchJSON(url){
   const res = await fetch(url);
   if(!res.ok) throw new Error(`HTTP ${res.status} - ${res.statusText}`);
   return res.json();
 }
 
-// Build API URLs
 function openWeatherWeatherUrl(lat, lon){
   return `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY_OPENWEATHER}`;
 }
@@ -29,7 +26,7 @@ function openWeatherGeocodeUrl(q){
   return `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(q)}&limit=1&appid=${API_KEY_OPENWEATHER}`;
 }
 
-// Open-Meteo Air Quality API (no key)
+//Meteo Air Quality API
 function openMeteoAQUrl(lat, lon){
   // includes hourly PM2.5 and other components for last 48 hours
   return `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm2_5,pm10,carbon_monoxide,nitrogen_dioxide&utc=true`;
@@ -228,3 +225,41 @@ async function init(){
 window.addEventListener('DOMContentLoaded', ()=>{
   init().catch(err=>console.error(err));
 });
+/* ------------------------------------------
+   ROBOT MOVEMENT INSIDE CITY CARD
+------------------------------------------ */
+
+const robotEl = document.getElementById("robotAssistant");
+const faceEl = robotEl.querySelector(".face");
+const leftEyeEl = robotEl.querySelector(".left-eye");
+const rightEyeEl = robotEl.querySelector(".right-eye");
+const mouthEl = robotEl.querySelector(".mouth");
+
+document.addEventListener("mousemove", (e) => {
+  const rect = robotEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const dx = e.clientX - cx;
+  const dy = e.clientY - cy;
+
+  // subtle head tilt
+  const rx = Math.max(-10, Math.min(10, -dy / 30));
+  const ry = Math.max(-14, Math.min(14, dx / 30));
+  robotEl.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+
+  // eyes
+  const ex = Math.max(-6, Math.min(6, dx / 35));
+  const ey = Math.max(-4, Math.min(4, dy / 45));
+  leftEyeEl.style.transform = `translate(${ex}px,${ey}px)`;
+  rightEyeEl.style.transform = `translate(${ex}px,${ey}px)`;
+
+  // mouth reaction
+  const scale = 1 + Math.min(0.35, Math.abs(dx) / 500);
+  mouthEl.style.transform = `scaleX(${scale})`;
+});
+
+// breathing
+setInterval(() => {
+  robotEl.classList.add("breathe");
+  setTimeout(() => robotEl.classList.remove("breathe"), 500);
+}, 2800);
