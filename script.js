@@ -1,4 +1,3 @@
-
 const API_KEY_OPENWEATHER = "80a25ee136b42335beffca3c666cf528"; 
 
 const AUTO_REFRESH_MS = 30000;
@@ -113,7 +112,7 @@ async function refreshAll(lat, lon, cityLabel){
       currentWind = hr.windspeed_10m[lastIdx];
     }
 
-    tempValueEl().innerText = `${Math.round(currentTemp)} °C`;
+   tempValueEl().innerText = `${Math.round(currentTemp)} °C`;
     humidityEl().innerText = `${Math.round(currentHum)} %`;
     windEl().innerText = `${currentWind} m/s`;
 
@@ -121,11 +120,30 @@ async function refreshAll(lat, lon, cityLabel){
     tempChart.data.datasets[0].data = [Math.max(0,currentTemp+20), 100]; // visual doughnut trick
     tempChart.update();
 
-    // Process AQ: use hourly pm2_5 array
-    const pmArr = aqData.hourly.pm2_5;
-    const pmNow = pmArr.length ? pmArr[pmArr.length-1] : null;
+    // Process AQ safely with fallback to latest non-null value
+    let pmArr = null;
+    let pmNow = null;
+
+    if (aqData && aqData.hourly && Array.isArray(aqData.hourly.pm2_5)) {
+      pmArr = aqData.hourly.pm2_5;
+
+      // Find latest non-null PM2.5 value
+      for (let i = pmArr.length - 1; i >= 0; i--) {
+        if (pmArr[i] !== null && pmArr[i] !== undefined) {
+          pmNow = pmArr[i];
+          break;
+        }
+      }
+    } else {
+      console.warn("PM2.5 data missing in AQ response:", aqData);
+    }
+
     aqiValueEl().innerText = pmNow !== null ? `${pmNow.toFixed(1)} µg/m³` : '--';
-    aqiChart.data.datasets[0].data = [Math.max(0, pmNow || 0), 200];
+
+    // avoid NaN in chart
+    const safePm = pmNow !== null ? pmNow : 0;
+
+    aqiChart.data.datasets[0].data = [Math.max(0, safePm), 200];
     aqiChart.update();
 
     // Humidity bar
@@ -224,7 +242,7 @@ async function init(){
 // Kickoff
 window.addEventListener('DOMContentLoaded', ()=>{
   init().catch(err=>console.error(err));
-});
+} );
 /* ------------------------------------------
    ROBOT MOVEMENT INSIDE CITY CARD
 ------------------------------------------ */
